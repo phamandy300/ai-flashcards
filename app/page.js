@@ -162,7 +162,7 @@ export default function Home() {
 						variant="h2"
 						sx={{ fontSize: "2.5rem", fontWeight: "bold", mb: 2 }}
 					>
-						<GradientText variant="h2">Welcome {dynamicText}</GradientText>
+						<GradientText >Welcome {dynamicText}</GradientText>
 					</Typography>
 					<Typography variant="h5" sx={{ mb: 4, color: "#000000" }}>
 						Dive into language learning with our interactive and AI-powered
@@ -238,7 +238,7 @@ export default function Home() {
 					</Grid>
 				</Box>
 
-				<Box sx={{ my: 6, textAlign: "center", px: 2, color: "#000000" }}>
+				{/* <Box sx={{ my: 6, textAlign: "center", px: 2, color: "#000000" }}>
 					<Typography variant="h4" gutterBottom sx={{ color: "#000000" }}>
 						Pricing Plans
 					</Typography>
@@ -282,7 +282,7 @@ export default function Home() {
 							</Grid>
 						))}
 					</Grid>
-				</Box>
+				</Box> */}
 
 				<Box
 					sx={{
@@ -298,7 +298,7 @@ export default function Home() {
 					<Box sx={{ mt: 2 }}>
 						<IconButton
 							color="inherit"
-							href="https://www.linkedin.com/in/wilkin-ruiz/"
+							href="https://www.linkedin.com/in/andy-pham-03454a25a/"
 							target="_blank"
 							rel="noopener"
 						>
