@@ -1,330 +1,203 @@
 "use client";
 
 import getStripe from "@/utils/get-stripe";
-import { styled } from "@mui/material/styles";
-import ArrowOutwardIcon from "@mui/icons-material/ArrowOutward";
-import {
-
-	FaLinkedinIn,
-} from "react-icons/fa";
-import {
-	AppBar,
-	Box,
-	Container,
-	Grid,
-	Typography,
-	IconButton,
-	Paper,
-} from "@mui/material";
+import { FaLinkedinIn, FaGithub, FaGlobe } from "react-icons/fa";
 import Head from "next/head";
-import Link from "next/link";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-// Styled component for gradient text
-const GradientText = styled(Typography)(({ theme }) => ({
-	background: "linear-gradient(45deg, #f06, #ff7e5f)",
-	WebkitBackgroundClip: "text",
-	WebkitTextFillColor: "transparent",
-	fontSize: "3rem",
-	fontWeight: "bold",
-}));
-
-// Language Learning App Features
-const features = [
-	{
-		title: "Immersive Learning",
-		description:
-			"Transform your language learning experience with interactive flashcards designed to immerse you in the new language. Practice vocabulary, phrases, and grammar with ease.",
-	},
-	{
-		title: "Personalized Flashcards",
-		description:
-			"Our AI generates flashcards tailored to your learning needs. Add your own content, or use our smart algorithms to create flashcards from texts and documents.",
-	},
-	{
-		title: "Accessible Anytime",
-		description:
-			"Study and review flashcards on any device, whether you’re at home or on the go. Your progress is synced across devices, so you can pick up right where you left off.",
-	},
-];
-
-// Pricing Plans
-const pricingPlans = [
-	{
-		title: "Free Tier",
-		price: "$0",
-		features: [
-			"Basic Flashcards",
-			"Limited Flashcard Creation",
-			"Access to Community Support",
-		],
-	},
-	{
-		title: "Basic Tier",
-		price: "$9.99/month",
-		features: [
-			"Unlimited Flashcards",
-			"Personalized Content",
-			"Priority Support",
-		],
-	},
-	{
-		title: "Pro Tier",
-		price: "$19.99/month",
-		features: [
-			"All Basic Tier Features",
-			"Advanced Analytics",
-			"Custom Themes",
-			"One-on-One Coaching",
-		],
-	},
-];
-
 export default function Home() {
-	const [dynamicText, setDynamicText] = useState("");
+  const [scrollY, setScrollY] = useState(0);
+  const [dynamicText, setDynamicText] = useState("");
 
-	useEffect(() => {
-		const text = "to Language Learning";
-		let i = 0;
-		const intervalId = setInterval(() => {
-			setDynamicText(text.slice(0, i + 1));
-			i++;
-			if (i === text.length) {
-				clearInterval(intervalId);
-			}
-		}, 100);
-	}, []);
+  useEffect(() => {
+    const text = "to Language Learning";
+    let i = 0;
+    const intervalId = setInterval(() => {
+      setDynamicText(text.slice(0, i + 1));
+      i++;
+      if (i === text.length) {
+        clearInterval(intervalId);
+      }
+    }, 100);
+  }, []);
 
-	const handleSubmit = async (amount) => {
-		try {
-			const checkoutSession = await fetch(`/api/checkout_session`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					origin: "http://localhost:3000",
-				},
-				body: JSON.stringify({ amount: Number(amount) }),
-			});
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-			const checkoutSessionJson = await checkoutSession.json();
+  const handleSubmit = async (amount) => {
+    try {
+      const checkoutSession = await fetch(`/api/checkout_session`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          origin: "http://localhost:3000",
+        },
+        body: JSON.stringify({ amount: Number(amount) }),
+      });
 
-			if (checkoutSession.status === 500) {
-				console.error(
-					"Error creating checkout session:",
-					checkoutSessionJson.error
-				);
-				return;
-			}
+      const checkoutSessionJson = await checkoutSession.json();
 
-			const stripe = await getStripe();
-			const { error } = await stripe.redirectToCheckout({
-				sessionId: checkoutSessionJson.id,
-			});
+      if (checkoutSession.status === 500) {
+        console.error(
+          "Error creating checkout session:",
+          checkoutSessionJson.error
+        );
+        return;
+      }
 
-			if (error) {
-				console.warn(error.message);
-			}
-		} catch (error) {
-			console.error("An error occurred:", error);
-		}
-	};
+      const stripe = await getStripe();
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: checkoutSessionJson.id,
+      });
 
-	return (
-		<Container maxWidth="100vw" disableGutters>
-			<Head>
-				<title>Language Learning Flashcards</title>
-				<meta
-					name="description"
-					content="Enhance your language skills with interactive flashcards"
-				/>
-			</Head>
-			<Box
-				sx={{
-					minHeight: "100vh",
-					background: "linear-gradient(135deg, #f8f9fa, #e9ecef)",
-					color: "#212529",
-					display: "flex",
-					flexDirection: "column",
-				}}
-			>
-				<Box
-					sx={{
-						flexGrow: 1,
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						textAlign: "center",
-						flexDirection: "column",
-						py: 8,
-					}}
-				>
-					<Typography
-						variant="h2"
-						sx={{ fontSize: "2.5rem", fontWeight: "bold", mb: 2 }}
-					>
-						<GradientText >Welcome {dynamicText}</GradientText>
-					</Typography>
-					<Typography variant="h5" sx={{ mb: 4, color: "#000000" }}>
-						Dive into language learning with our interactive and AI-powered
-						flashcards
-					</Typography>
-					<IconButton
-						sx={{
-							mt: 2,
-							width: 150,
-							height: 150,
-							borderRadius: "50%",
-							border: "3px solid",
-							borderColor: "#007bff",
-							backgroundColor: "#0056b3",
-							color: "#fff",
-							"&:hover": {
-								borderColor: "#0056b3",
-								backgroundColor: "#004085",
-							},
-							display: "flex",
-							flexDirection: "column",
-							alignItems: "center",
-							justifyContent: "center",
-							p: 2,
-						}}
-						href="/generate"
-					>
-						<Typography
-							variant="body2"
-							sx={{ color: "white", mb: 1, fontSize: "1.2rem" }}
-						>
-							Start Your Journey <ArrowOutwardIcon sx={{ color: "white" }} />
-						</Typography>
-					</IconButton>
-				</Box>
+      if (error) {
+        console.warn(error.message);
+      }
+    } catch (error) {
+      console.error("An error occurred:", error);
+    }
+  };
 
-				<Box sx={{ my: 6, textAlign: "center", px: 2 }}>
-					<Typography variant="h4" gutterBottom sx={{ color: "#000000" }}>
-						Key Features
-					</Typography>
-					<Typography variant="body1" paragraph sx={{ color: "#000000" }}>
-						Discover how our flashcard app enhances your language learning
-						experience with these standout features:
-					</Typography>
-					<Grid container spacing={4} justifyContent="center">
-						{features.map((feature, index) => (
-							<Grid item xs={12} sm={4} key={index}>
-								<Paper
-									sx={{
-										p: 3,
-										backgroundColor: "rgba(255, 255, 255, 0.1)",
-										borderRadius: 2,
-										boxShadow: "0 4px 6px rgba(0, 0, 0, 0.2)",
-									}}
-								>
-									<Typography
-										variant="h6"
-										gutterBottom
-										sx={{ color: "#000000" }}
-									>
-										{feature.title}
-									</Typography>
-									<Typography
-										variant="body2"
-										paragraph
-										sx={{ color: "#000000" }}
-									>
-										{feature.description}
-									</Typography>
-								</Paper>
-							</Grid>
-						))}
-					</Grid>
-				</Box>
+  const features = [
+    {
+      title: "Immersive Learning",
+      description: "Transform your language journey through interactive, AI-powered flashcards."
+    },
+    {
+      title: "Personalized For You",
+      description: "Custom flashcards that adapt to your learning style and pace."
+    },
+    {
+      title: "Learn Anywhere",
+      description: "Seamlessly sync your progress across all your devices."
+    }
+  ];
 
-				{/* <Box sx={{ my: 6, textAlign: "center", px: 2, color: "#000000" }}>
-					<Typography variant="h4" gutterBottom sx={{ color: "#000000" }}>
-						Pricing Plans
-					</Typography>
-					<Typography variant="body1" paragraph sx={{ color: "#000000" }}>
-						Choose a plan that fits your learning needs:
-					</Typography>
-					<Grid container spacing={4} justifyContent="center">
-						{pricingPlans.map((plan, index) => (
-							<Grid item xs={12} sm={4} key={index}>
-								<Paper
-									sx={{
-										p: 3,
-										backgroundColor: "rgba(255, 255, 255, 0.1)",
-										borderRadius: 2,
-										boxShadow: "0 4px 6px rgba(0, 0, 0, 0.2)",
-										textAlign: "center",
-									}}
-								>
-									<Typography
-										variant="h5"
-										gutterBottom
-										sx={{ color: "#000000" }}
-									>
-										{plan.title}
-									</Typography>
-									<Typography
-										variant="h6"
-										gutterBottom
-										sx={{ color: "#000000" }}
-									>
-										{plan.price}
-									</Typography>
-									<ul>
-										{plan.features.map((feature, i) => (
-											<li key={i} style={{ color: "#000000" }}>
-												{feature}
-											</li>
-										))}
-									</ul>
-								</Paper>
-							</Grid>
-						))}
-					</Grid>
-				</Box> */}
+  return (
+    <div className="min-h-screen bg-black overflow-hidden">
+      {/* Hero Section */}
+      <div className="relative h-screen flex items-center justify-center">
+        <div 
+          className="absolute inset-0 bg-gradient-to-br from-purple-900 to-black opacity-50 gradient-animate"
+          style={{
+            transform: `translateY(${scrollY * 0.5}px)`
+          }}
+        />
+        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-6xl md:text-8xl font-bold mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300"
+          >
+            Welcome {dynamicText}
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="text-xl md:text-2xl mb-8 text-gray-300"
+          >
+            Dive into language learning with our interactive and AI-powered flashcards
+          </motion.p>
+          <motion.a 
+            href="/generate"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-block bg-white text-black px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-100 transition-colors shadow-lg hover:shadow-xl"
+          >
+            Start Your Journey
+          </motion.a>
+        </div>
+      </div>
 
-				<Box
-					sx={{
-						py: 4,
-						textAlign: "center",
-						backgroundColor: "#343a40",
-						color: "#fff",
-					}}
-				>
-					<Typography variant="body2">
-						&copy; 2024 Language Learning Flashcards. All rights reserved.
-					</Typography>
-					<Box sx={{ mt: 2 }}>
-						<IconButton
-							color="inherit"
-							href="https://www.linkedin.com/in/andy-pham-03454a25a/"
-							target="_blank"
-							rel="noopener"
-						>
-							<FaLinkedinIn />
-						</IconButton>
-						{/* Placeholder for the Second LinkedIn Icon */}
-						<IconButton
-							color="inherit"
-							href="https://linkedin.com"
-							target="_blank"
-							rel="noopener"
-						>
-							<FaLinkedinIn />
-						</IconButton>
-						{/* Placeholder for the Third LinkedIn Icon */}
-						<IconButton
-							color="inherit"
-							href="https://linkedin.com"
-							target="_blank"
-							rel="noopener"
-						>
-							<FaLinkedinIn />
-						</IconButton>
-					</Box>
-				</Box>
-			</Box>
-		</Container>
-	);
+      {/* Features Section */}
+      <div className="max-w-7xl mx-auto px-4 py-24">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-12"
+        >
+          {features.map((feature, index) => (
+            <motion.div 
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.2 }}
+              className="p-8 rounded-2xl bg-gradient-to-br from-gray-900 to-black border border-gray-800 hover:border-gray-700 transition-colors shadow-lg hover:shadow-xl"
+            >
+              <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
+              <p className="text-gray-400">{feature.description}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="relative h-screen flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-t from-black to-purple-900 opacity-50 gradient-animate" />
+        <div className="relative z-10 text-center px-4">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-4xl md:text-6xl font-bold mb-6"
+          >
+            Begin Your Journey
+          </motion.h2>
+          <motion.a 
+            href="/generate"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="inline-block bg-white text-black px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-100 transition-colors shadow-lg hover:shadow-xl"
+          >
+            Get Started Now
+          </motion.a>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-800 py-12 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+          <p className="text-gray-400 mb-4 md:mb-0">© 2024 Language Learning Flashcards</p>
+          <div className="flex space-x-6">
+            <a 
+              href="https://www.linkedin.com/in/andy-pham-03454a25a/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <FaLinkedinIn className="w-6 h-6" />
+            </a>
+            <a 
+              href="https://andypham.cc"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <FaGlobe className="w-6 h-6" />
+            </a>
+            <a 
+              href="https://github.com/phamandy300/ai-flashcards"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <FaGithub className="w-6 h-6" />
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
 }
