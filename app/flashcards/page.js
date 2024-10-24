@@ -8,30 +8,13 @@ import {
   getDocs,
   writeBatch,
   setDoc,
-  getFirestore,
 } from "firebase/firestore";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
-import {
-  Box,
-  Button,
-  Card,
-  CardActionArea,
-  CardContent,
-  Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Grid,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import { db, auth } from "../../firebase"; // Make sure these are properly exported from your firebase.js
+import { Trash2, Edit2, Plus } from "lucide-react";
+import { db, auth } from "../../firebase";
 
 export default function Flashcards() {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -39,11 +22,11 @@ export default function Flashcards() {
   const [flashcards, setFlashcards] = useState([]);
   const [name, setName] = useState("");
   const [oldName, setOldName] = useState("");
-  const [open, setOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
 
-  // Handle Firebase Authentication with Clerk
+  // Firebase Authentication logic remains the same
   useEffect(() => {
     const authenticateWithFirebase = async () => {
       if (isSignedIn && user) {
@@ -62,7 +45,7 @@ export default function Flashcards() {
     authenticateWithFirebase();
   }, [isSignedIn, user, getToken]);
 
-  // Fetch flashcards only after Firebase authentication is complete
+  // Fetch flashcards logic remains the same
   useEffect(() => {
     async function getFlashcards() {
       if (!isAuthenticated || !user) return;
@@ -109,31 +92,12 @@ export default function Flashcards() {
     }
   };
 
-  if (!isLoaded || !isSignedIn) {
-    return <Typography>Please sign in to access your flashcards.</Typography>;
-  }
-
   const handleCardClick = (id) => {
     router.push(`/flashcard?id=${id}`);
   };
 
-  const handleOpen = (flashcardName) => {
-    setOpen(true);
-    setOldName(flashcardName);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    setName("");
-  };
-
   const editFlashcard = async (oldName, newName) => {
-    if (!isAuthenticated) return;
-    
-    if (!newName) {
-      alert("Please enter a new name");
-      return;
-    }
+    if (!isAuthenticated || !newName) return;
 
     try {
       const userDocRef = doc(db, "users", user.id);
@@ -144,12 +108,7 @@ export default function Flashcards() {
         const flashcardIndex = collections.findIndex((f) => f.name === oldName);
         
         if (collections.some((f) => f.name === newName)) {
-          alert("A flashcard with this name already exists. Please choose a different name.");
-          return;
-        }
-
-        if (flashcardIndex === -1) {
-          alert("Flashcard collection not found");
+          alert("A flashcard with this name already exists");
           return;
         }
 
@@ -157,130 +116,133 @@ export default function Flashcards() {
         await setDoc(userDocRef, { flashcards: collections }, { merge: true });
 
         setFlashcards(
-          flashcards.map((flashcard) => {
-            if (flashcard.name === oldName) {
-              return { ...flashcard, name: newName };
-            }
-            return flashcard;
-          })
+          flashcards.map((flashcard) =>
+            flashcard.name === oldName ? { ...flashcard, name: newName } : flashcard
+          )
         );
 
         const oldSubColRef = collection(userDocRef, oldName);
         const newSubColRef = collection(userDocRef, newName);
-
         const querySnapshot = await getDocs(oldSubColRef);
         const batch = writeBatch(db);
 
         querySnapshot.forEach((docSnapshot) => {
-          const oldDocRef = docSnapshot.ref;
           const newDocRef = doc(db, `${newSubColRef.path}/${docSnapshot.id}`);
           batch.set(newDocRef, docSnapshot.data());
-          batch.delete(oldDocRef);
+          batch.delete(docSnapshot.ref);
         });
 
         await batch.commit();
-        handleClose();
+        setIsModalOpen(false);
+        setName("");
       }
     } catch (error) {
       console.error("Error editing flashcard:", error);
     }
   };
 
+  if (!isLoaded || !isSignedIn) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <p className="text-gray-300 text-xl">Please sign in to access your flashcards.</p>
+      </div>
+    );
+  }
+
   return (
-    <Container>
-      <Grid container spacing={2}>
-        {flashcards.map((flashcard, index) => (
-          <Grid item key={index} xs={12} sm={6} md={4}>
-            <Card
-              sx={{
-                display: "flex",
-                p: 2,
-                mb: 2,
-                bgcolor: "#fff",
-                boxShadow: 3,
-              }}
+    <div className="min-h-screen bg-black px-4 py-12">
+      <div className="max-w-7xl mx-auto">
+        <motion.h1 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-4xl md:text-5xl font-bold mb-12 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300"
+        >
+          Your Flashcards
+        </motion.h1>
+        
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {flashcards.map((flashcard, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="relative group"
             >
-              <CardActionArea
+              <div 
                 onClick={() => handleCardClick(flashcard.name)}
-                sx={{ flex: 1 }}
+                className="cursor-pointer p-6 rounded-2xl bg-gradient-to-br from-gray-900 to-black border border-gray-800 hover:border-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
-                <CardContent>
-                  <Typography
-                    variant="h6"
-                    component="div"
-                    sx={{ fontSize: "1.2rem", color: "#333" }}
+                <h2 className="text-xl font-semibold text-white mb-4">{flashcard.name}</h2>
+                
+                <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOldName(flashcard.name);
+                      setIsModalOpen(true);
+                    }}
+                    className="p-2 rounded-full bg-purple-900 hover:bg-purple-800 transition-colors"
                   >
-                    {flashcard.name}
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  p: 1,
-                }}
-              >
-                <Button
-                  sx={{
-                    mb: 1,
-                    backgroundColor: "#87CEEB",
-                    "&:hover": {
-                      backgroundColor: "#0000FF",
-                    },
-                    borderRadius: 1,
-                    p: 1,
+                    <Edit2 className="w-4 h-4 text-white" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(flashcard.name);
+                    }}
+                    className="p-2 rounded-full bg-red-900 hover:bg-red-800 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Edit Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-gray-900 rounded-xl p-6 w-full max-w-md border border-gray-800"
+            >
+              <h3 className="text-xl font-bold text-white mb-4">Edit Flashcard</h3>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter new name"
+                className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none mb-4"
+              />
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setName("");
                   }}
-                  onClick={() => handleOpen(flashcard.name)}
+                  className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors"
                 >
-                  <EditIcon sx={{ fontSize: "1.9rem" }} />
-                </Button>
-                <Button
-                  sx={{
-                    mb: 1,
-                    backgroundColor: "#FF7F7F",
-                    "&:hover": {
-                      backgroundColor: "#FF0000",
-                    },
-                    borderRadius: 1,
-                    p: 1,
-                  }}
-                  onClick={() => handleDelete(flashcard.name)}
+                  Cancel
+                </button>
+                <button
+                  onClick={() => editFlashcard(oldName, name)}
+                  className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-500 transition-colors"
                 >
-                  <DeleteIcon sx={{ fontSize: "1.5rem" }} />
-                </Button>
-              </Box>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Edit Flashcards</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Enter a name for the flashcard collection
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Collection Name"
-            type="text"
-            fullWidth
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            variant="outlined"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={() => editFlashcard(oldName, name)} color="primary">
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+                  Save
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
