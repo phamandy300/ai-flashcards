@@ -2,7 +2,6 @@
 
 import getStripe from "@/utils/get-stripe";
 import { FaLinkedinIn, FaGithub, FaGlobe } from "react-icons/fa";
-import Head from "next/head";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
@@ -28,40 +27,6 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleSubmit = async (amount) => {
-    try {
-      const checkoutSession = await fetch(`/api/checkout_session`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          origin: "http://localhost:3000",
-        },
-        body: JSON.stringify({ amount: Number(amount) }),
-      });
-
-      const checkoutSessionJson = await checkoutSession.json();
-
-      if (checkoutSession.status === 500) {
-        console.error(
-          "Error creating checkout session:",
-          checkoutSessionJson.error
-        );
-        return;
-      }
-
-      const stripe = await getStripe();
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: checkoutSessionJson.id,
-      });
-
-      if (error) {
-        console.warn(error.message);
-      }
-    } catch (error) {
-      console.error("An error occurred:", error);
-    }
-  };
-
   const features = [
     {
       title: "Immersive Learning",
@@ -78,11 +43,14 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-black overflow-hidden">
+    <div className="relative min-h-screen bg-black overflow-hidden">
+      {/* Background gradient that spans the entire page */}
+      <div className="fixed inset-0 bg-gradient-to-b from-purple-900/50 via-black to-purple-900/30 pointer-events-none" />
+      
       {/* Hero Section */}
-      <div className="relative h-screen flex items-center justify-center">
+      <div className="relative min-h-screen flex items-center justify-center">
         <div 
-          className="absolute inset-0 bg-gradient-to-br from-purple-900 to-black opacity-50 gradient-animate"
+          className="absolute inset-0 bg-gradient-to-br from-purple-900 to-black opacity-30"
           style={{
             transform: `translateY(${scrollY * 0.5}px)`
           }}
@@ -92,7 +60,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-6xl md:text-8xl font-bold mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300"
+            className="text-6xl md:text-8xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300 leading-normal pb-2"
           >
             Welcome {dynamicText}
           </motion.h1>
@@ -100,7 +68,7 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-xl md:text-2xl mb-8 text-gray-300"
+            className="text-xl md:text-2xl mt-8 mb-8 text-gray-300"
           >
             Dive into language learning with our interactive and AI-powered flashcards
           </motion.p>
@@ -117,38 +85,40 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="max-w-7xl mx-auto px-4 py-24">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-12"
-        >
-          {features.map((feature, index) => (
-            <motion.div 
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.2 }}
-              className="p-8 rounded-2xl bg-gradient-to-br from-gray-900 to-black border border-gray-800 hover:border-gray-700 transition-colors shadow-lg hover:shadow-xl"
-            >
-              <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
-              <p className="text-gray-400">{feature.description}</p>
-            </motion.div>
-          ))}
-        </motion.div>
+      {/* Features Section with modified background */}
+      <div className="relative z-10">
+        <div className="max-w-7xl mx-auto px-4 py-24">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-12"
+          >
+            {features.map((feature, index) => (
+              <motion.div 
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.2 }}
+                className="p-8 rounded-2xl bg-gradient-to-br from-gray-900/80 to-black/80 backdrop-blur-sm border border-gray-800 hover:border-gray-700 transition-colors shadow-lg hover:shadow-xl"
+              >
+                <h3 className="text-2xl font-bold mb-4 text-white">{feature.title}</h3>
+                <p className="text-gray-400">{feature.description}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
       </div>
 
-      {/* CTA Section */}
-      <div className="relative h-screen flex items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-t from-black to-purple-900 opacity-50 gradient-animate" />
+      {/* CTA Section with smoother transition */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/20 to-black/50" />
         <div className="relative z-10 text-center px-4">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-4xl md:text-6xl font-bold mb-6"
+            className="text-4xl md:text-6xl font-bold mb-6 text-white"
           >
             Begin Your Journey
           </motion.h2>
@@ -167,7 +137,7 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 py-12 px-4">
+      <footer className="relative z-10 border-t border-gray-800 py-12 px-4 bg-black/80">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 mb-4 md:mb-0">© 2024 Language Learning Flashcards</p>
           <div className="flex space-x-6">

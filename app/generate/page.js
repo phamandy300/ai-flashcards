@@ -2,7 +2,7 @@
 
 import { db } from "@/firebase";
 import { useUser } from "@clerk/nextjs";
-import { getDoc, writeBatch, collection, doc, setDoc } from "firebase/firestore";
+import { getDoc, writeBatch, collection, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -138,16 +138,33 @@ export default function Generate() {
                   className="relative perspective-1000"
                 >
                   <div
-                    className={`relative w-full h-64 cursor-pointer transition-transform duration-500 transform-style-3d ${
+                    className={`relative w-full h-64 cursor-pointer transition-transform duration-500 transform ${
                       flipped[index] ? "rotate-y-180" : ""
                     }`}
+                    style={{ transformStyle: "preserve-3d" }}
                     onClick={() => handleCardClick(index)}
                   >
-                    <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-xl p-6 flex items-center justify-center">
-                      <p className="text-lg font-medium">{flashcard.front}</p>
+                    {/* Front of Card */}
+                    <div
+                      className="absolute inset-0 backface-hidden bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-xl p-6 flex items-center justify-center"
+                      style={{ backfaceVisibility: "hidden" }}
+                    >
+                      <p className="text-lg font-medium text-center">
+                        {flashcard.front} {/* Word in native language */}
+                      </p>
                     </div>
-                    <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-purple-900 to-black border border-gray-800 rounded-xl p-6 flex items-center justify-center rotate-y-180">
-                      <p className="text-lg font-medium">{flashcard.back}</p>
+
+                    {/* Back of Card */}
+                    <div
+                      className="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-purple-900 to-black border border-gray-800 rounded-xl p-6 flex items-center justify-center"
+                      style={{
+                        backfaceVisibility: "hidden",
+                        transform: "rotateY(180deg)",
+                      }}
+                    >
+                      <p className="text-lg font-medium text-center">
+                        {flashcard.back} {/* Additional information */}
+                      </p>
                     </div>
                   </div>
                 </motion.div>
